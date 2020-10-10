@@ -44,8 +44,17 @@ namespace GRXoft.Extensions.DependencyInjection
 
         private ParameterInfo MatchParameter(string name)
         {
-            return _parameters.FirstOrDefault(p => string.Equals(p.Name, name, StringComparison.OrdinalIgnoreCase))
-                ?? throw new Exception(); // TODO
+            var matches = _parameters.Where(p => p.Name.Equals(name, StringComparison.Ordinal)).GetEnumerator();
+
+            if (!matches.MoveNext())
+                throw new Exception(); // TODO: No match
+
+            var match = matches.Current;
+
+            if (matches.MoveNext())
+                throw new Exception(); // TODO: Ambiguous match
+
+            return match;
         }
 
         private ParameterInfo MatchParameter(Type type)
