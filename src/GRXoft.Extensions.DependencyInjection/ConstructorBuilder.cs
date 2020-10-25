@@ -6,8 +6,10 @@ using System.Reflection;
 
 namespace GRXoft.Extensions.DependencyInjection
 {
-    public class ConstructorBuilder<TService> : IConstructorBuilder<TService>
+    public sealed class ConstructorBuilder<TService> : IConstructorBuilder<TService>
     {
+        private static readonly MethodInfo _method = typeof(IServiceProvider).GetMethod(nameof(IServiceProvider.GetService));
+
         private readonly ConstructorInfo _constructor;
         private readonly IDictionary<string, Delegate> _parameterResolvers;
         private readonly IReadOnlyList<ParameterInfo> _parameters;
@@ -33,26 +35,20 @@ namespace GRXoft.Extensions.DependencyInjection
         /// <inheritdoc/>
         public Func<IServiceProvider, TService> Build()
         {
-            var sp = Expression.Parameter(typeof(IServiceProvider), "sp");
+            var serviceProvider = Expression.Parameter(typeof(IServiceProvider), "sp");
+            
             var parameters = new Expression[_parameters.Count];
             for (var i = 0; i < parameters.Length; i++)
             {
                 var parameter = _parameters[i];
                 if (_parameterResolvers.TryGetValue(parameter.Name, out var resolver))
-                    parameters[i] = BuildParameterExpression(sp, parameter, resolver);
+                    parameters[i] = BuildCustomParameterExpression(serviceProvider, parameter, resolver);
                 else
-                {
-                    var method = typeof(IServiceProvider).GetMethod(nameof(IServiceProvider.GetService));
-
-                    var type = Expression.Constant(parameter.ParameterType);
-                    var call = Expression.Call(sp, method, type);
-                    var convert = Expression.Convert(call, parameter.ParameterType);
-                    parameters[i] = convert;
-                }
+                    parameters[i] = BuildDefaultParameterExpression(serviceProvider, parameter);
             }
 
             var ctor = Expression.New(_constructor, parameters);
-            var lambda = Expression.Lambda<Func<IServiceProvider, TService>>(ctor, sp);
+            var lambda = Expression.Lambda<Func<IServiceProvider, TService>>(ctor, serviceProvider);
 
             return lambda.Compile();
         }
@@ -71,9 +67,19 @@ namespace GRXoft.Extensions.DependencyInjection
             _parameterResolvers[parameter.Name] = resolver;
         }
 
-        private static Expression BuildParameterExpression(Expression serviceProviderExpression, ParameterInfo parameter, Delegate resolver)
+        private static Expression BuildDefaultParameterExpression(ParameterExpression serviceProvider, ParameterInfo parameter)
         {
-            var expression = (Expression)Expression.Invoke(Expression.Constant(resolver), serviceProviderExpression);
+            var type = Expression.Constant(parameter.ParameterType);
+            var expression = (Expression)Expression.Call(serviceProvider, _method, type);
+            if (!parameter.ParameterType.Equals(_method.ReturnType))
+                expression = Expression.Convert(expression, parameter.ParameterType);
+
+            return expression;
+        }
+
+        private static Expression BuildCustomParameterExpression(Expression serviceProvider, ParameterInfo parameter, Delegate resolver)
+        {
+            var expression = (Expression)Expression.Invoke(Expression.Constant(resolver), serviceProvider);
 
             if (!parameter.ParameterType.Equals(resolver.Method.ReturnType))
                 expression = Expression.Convert(expression, parameter.ParameterType);
