@@ -36,6 +36,9 @@ namespace GRXoft.Extensions.DependencyInjection
         /// Creates a delegate capable of instantiating <typeparamref name="TService"/>
         /// using an <see cref="IServiceProvider"/>.
         /// </summary>
+        /// <returns>
+        /// TODO
+        /// </returns>
         /// <exception cref="InvalidOperationException">
         /// Thrown when a construction delegate could not be created. More details
         /// should be provided in <see cref="Exception.InnerException"/>.
@@ -63,11 +66,11 @@ namespace GRXoft.Extensions.DependencyInjection
         /// <summary>
         /// Configures a contructor parameter to be resolved using given <paramref name="resolver"/>.
         /// </summary>
-        /// <typeparam name="T">Parameter type.</typeparam>
+        /// <typeparam name="TParameter">Parameter type.</typeparam>
         /// <param name="name">
         /// Parameter name to match against.
         /// <para/>
-        /// If <see langword="null"/>, the parameter will be matched against type <typeparamref name="T"/> instead.
+        /// If <see langword="null"/>, the parameter will be matched against type <typeparamref name="TParameter"/> instead.
         /// </param>
         /// <param name="resolver">
         /// A delegate that would produce parameter value given an <see cref="IServiceProvider"/>.
@@ -79,33 +82,38 @@ namespace GRXoft.Extensions.DependencyInjection
         /// <param name="overwrite">
         /// Value indicating whether existing parameter configuration should be overwritten.
         /// </param>
+        /// <returns>
+        /// A reference to this builder instance to support chaining.
+        /// </returns>
         /// <exception cref="ArgumentException">
         /// If <paramref name="name"/> was given, then the exception is thrown when:
         /// <list type="bullet">
         /// <item><paramref name="name"/> is an empty string or contains only whitespace</item>
         /// <item>Parameter with given <paramref name="name"/> was not found</item>
-        /// <item>Parameter with given <paramref name="name"/> is not compatible with type <typeparamref name="T"/></item>
+        /// <item>Parameter with given <paramref name="name"/> is not compatible with type <typeparamref name="TParameter"/></item>
         /// </list>
         /// Otherwise the exception is thrown when:
         /// <list type="bullet">
-        /// <item>Parameter of given type <typeparamref name="T"/> was not found</item>
-        /// <item>There are multiple parameters matchin type <typeparamref name="T"/></item>
+        /// <item>Parameter of given type <typeparamref name="TParameter"/> was not found</item>
+        /// <item>There are multiple parameters matchin type <typeparamref name="TParameter"/></item>
         /// </list>
         /// </exception>
         /// <exception cref="InvalidOperationException">
         /// Thrown when <paramref name="overwrite"/> is <see langword="false"/> and a matching parameter resolver was already configured.
         /// </exception>
-        public void ResolveParameter<T>(string name, Func<IServiceProvider, T> resolver, bool overwrite)
+        public ConstructorBuilder<TService> Resolve<TParameter>(string name, Func<IServiceProvider, TParameter> resolver, bool overwrite)
         {
             if (name is string && string.IsNullOrWhiteSpace(name))
                 throw new ArgumentException(); // TODO
 
-            var parameter = MatchParameter(typeof(T), name);
+            var parameter = MatchParameter(typeof(TParameter), name);
 
             if (!overwrite && _parameterResolvers.ContainsKey(parameter.Name))
                 throw new Exception(); // TODO
 
             _parameterResolvers[parameter.Name] = resolver;
+
+            return this;
         }
 
         private static Expression BuildDefaultParameterExpression(ParameterExpression serviceProvider, ParameterInfo parameter)
