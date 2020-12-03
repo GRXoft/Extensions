@@ -53,17 +53,31 @@ namespace GRXoft.Extensions.DependencyInjection
             return lambda.Compile();
         }
 
+        public ConstructorBuilder Resolve(Type type, Func<IServiceProvider, object> resolver, bool overwrite)
+        {
+            if (type is null)
+                throw new ArgumentNullException(nameof(type));
+
+            if (resolver is null)
+                throw new ArgumentNullException(nameof(resolver));
+
+            Resolve(null, type, resolver, overwrite);
+
+            return this;
+        }
+
         public ConstructorBuilder Resolve(string name, Func<IServiceProvider, object> resolver, bool overwrite)
         {
-            if (name is string && string.IsNullOrWhiteSpace(name))
+            if (name is null)
+                throw new ArgumentNullException(nameof(name));
+
+            if (string.IsNullOrWhiteSpace(name))
                 throw new ArgumentException(); // TODO
 
-            var parameter = MatchParameter(name, null);
+            if (resolver is null)
+                throw new ArgumentNullException(nameof(resolver));
 
-            if (!overwrite && _parameterResolvers.ContainsKey(parameter.Name))
-                throw new Exception(); // TODO
-
-            _parameterResolvers[parameter.Name] = resolver;
+            Resolve(name, null, resolver, overwrite);
 
             return this;
         }
@@ -107,7 +121,7 @@ namespace GRXoft.Extensions.DependencyInjection
             return ctors[0];
         }
 
-        private ParameterInfo MatchParameter(string name, Type type)
+        private void Resolve(string name, Type type, Delegate resolver, bool overwrite)
         {
             Debug.Assert(name is string || type is Type);
 
@@ -129,7 +143,10 @@ namespace GRXoft.Extensions.DependencyInjection
             if (enumerator.MoveNext())
                 throw new Exception(); // TODO: Ambiguous match
 
-            return matchedParameter;
+            if (!overwrite && _parameterResolvers.ContainsKey(matchedParameter.Name))
+                throw new Exception(); // TODO
+
+            _parameterResolvers[matchedParameter.Name] = resolver;
         }
     }
 }
