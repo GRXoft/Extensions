@@ -53,7 +53,15 @@ namespace GRXoft.Extensions.DependencyInjection
             return lambda.Compile();
         }
 
-        public ConstructorBuilder Resolve(Type type, Func<IServiceProvider, object> resolver, bool overwrite)
+        /// <summary>
+        /// Configures parameter matched by <paramref name="type"/> to be resolved by given <paramref name="resolver"/>.
+        /// </summary>
+        /// <returns>This instance, for chaining.</returns>
+        /// <exception cref="ArgumentNullException">
+        /// Either <paramref name="type"/> or <paramref name="resolver"/> is null.
+        /// </exception>
+        /// <inheritdoc cref="Resolve(string, Type, Delegate, bool)"/>
+        public ConstructorBuilder Resolve(Type type, Func<IServiceProvider, object> resolver, bool overwrite = false)
         {
             if (type is null)
                 throw new ArgumentNullException(nameof(type));
@@ -121,6 +129,14 @@ namespace GRXoft.Extensions.DependencyInjection
             return ctors[0];
         }
 
+        /// <param name="name">Name of the parameter to be matched.</param>
+        /// <param name="type">Type of the parameter to be matched.</param>
+        /// <param name="resolver">Deletage that resolves parameter value.</param>
+        /// <param name="overwrite">Value indicating whether any pre-existing configuration should be overwritten.</param>
+        /// <exception cref="InvalidOperationException">
+        /// Matching parameter is already configured and <paramref name="overwrite"/> switch is set to false.
+        /// </exception>
+        /// TODO: Other exceptions
         private void Resolve(string name, Type type, Delegate resolver, bool overwrite)
         {
             Debug.Assert(name is string || type is Type);
@@ -144,7 +160,11 @@ namespace GRXoft.Extensions.DependencyInjection
                 throw new Exception(); // TODO: Ambiguous match
 
             if (!overwrite && _parameterResolvers.ContainsKey(matchedParameter.Name))
-                throw new Exception(); // TODO
+            {
+                throw new InvalidOperationException(
+                    $"Parameter '{matchedParameter.Name}' ({matchedParameter.ParameterType}) is already configured"
+                );
+            }
 
             _parameterResolvers[matchedParameter.Name] = resolver;
         }
