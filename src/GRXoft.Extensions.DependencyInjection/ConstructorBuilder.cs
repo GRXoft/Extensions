@@ -131,13 +131,10 @@ namespace GRXoft.Extensions.DependencyInjection
 
         /// <param name="name">Name of the parameter to be matched.</param>
         /// <param name="type">Type of the parameter to be matched.</param>
-        /// <param name="resolver">Deletage that resolves parameter value.</param>
-        /// <param name="overwrite">Value indicating whether any pre-existing configuration should be overwritten.</param>
-        /// <exception cref="InvalidOperationException">
-        /// Matching parameter is already configured and <paramref name="overwrite"/> switch is set to false.
+        /// <exception cref="ArgumentException">
+        /// Either none or multiple parameters match specified criteria.
         /// </exception>
-        /// TODO: Other exceptions
-        private void Resolve(string name, Type type, Delegate resolver, bool overwrite)
+        private ParameterInfo MatchParameter(string name, Type type)
         {
             Debug.Assert(name is string || type is Type);
 
@@ -152,12 +149,35 @@ namespace GRXoft.Extensions.DependencyInjection
             var enumerator = matchingParameters.GetEnumerator();
 
             if (!enumerator.MoveNext())
-                throw new Exception(); // TODO: No match
+            {
+                throw new ArgumentException(
+                    "No parameters match specified criteria " +
+                    $"(name={name}, type={type?.FullName})"
+                );
+            }
 
             var matchedParameter = enumerator.Current;
 
             if (enumerator.MoveNext())
-                throw new Exception(); // TODO: Ambiguous match
+            {
+                throw new ArgumentException(
+                    "Multiple parameters match specified criteria " +
+                    $"(name={name}, type={type?.FullName})"
+                );
+            }
+
+            return matchedParameter;
+        }
+
+        /// <param name="resolver">Deletage that resolves parameter value.</param>
+        /// <param name="overwrite">Value indicating whether any pre-existing configuration should be overwritten.</param>
+        /// <exception cref="InvalidOperationException">
+        /// Matching parameter is already configured and <paramref name="overwrite"/> switch is set to false.
+        /// </exception>
+        /// <inheritdoc cref="MatchParameter"/>
+        private void Resolve(string name, Type type, Delegate resolver, bool overwrite)
+        {
+            var matchedParameter = MatchParameter(name, type);
 
             if (!overwrite && _parameterResolvers.ContainsKey(matchedParameter.Name))
             {
