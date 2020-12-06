@@ -174,7 +174,7 @@ namespace GRXoft.Extensions.DependencyInjection
         /// <exception cref="InvalidOperationException">
         /// Matching parameter is already configured and <paramref name="overwrite"/> switch is set to false.
         /// </exception>
-        /// <inheritdoc cref="MatchParameter"/>
+        /// <inheritdoc cref="MatchParameter(string, Type)"/>
         private void Resolve(string name, Type type, Delegate resolver, bool overwrite)
         {
             var matchedParameter = MatchParameter(name, type);
