@@ -7,7 +7,7 @@ using System.Reflection;
 
 namespace GRXoft.Extensions.DependencyInjection
 {
-    public sealed class ConstructorBuilder
+    public sealed class ServiceFactoryBuilder
     {
         private static readonly MethodInfo _method = typeof(IServiceProvider).GetMethod(nameof(IServiceProvider.GetService));
 
@@ -15,11 +15,11 @@ namespace GRXoft.Extensions.DependencyInjection
         private readonly IDictionary<string, Delegate> _parameterResolvers;
         private readonly IReadOnlyList<ParameterInfo> _parameters;
 
-        public ConstructorBuilder(Type type) : this(SelectConstructor(type))
+        public ServiceFactoryBuilder(Type type) : this(SelectConstructor(type))
         {
         }
 
-        public ConstructorBuilder(ConstructorInfo constructor)
+        public ServiceFactoryBuilder(ConstructorInfo constructor)
         {
             _constructor = constructor ?? throw new ArgumentNullException(nameof(constructor));
             _parameters = _constructor.GetParameters();
@@ -61,7 +61,7 @@ namespace GRXoft.Extensions.DependencyInjection
         /// Either <paramref name="type"/> or <paramref name="resolver"/> is null.
         /// </exception>
         /// <inheritdoc cref="Resolve(string, Type, Delegate, bool)"/>
-        public ConstructorBuilder Resolve(Type type, Func<IServiceProvider, object> resolver, bool overwrite = false)
+        public ServiceFactoryBuilder Resolve(Type type, Func<IServiceProvider, object> resolver, bool overwrite = false)
         {
             if (type is null)
                 throw new ArgumentNullException(nameof(type));
@@ -74,7 +74,7 @@ namespace GRXoft.Extensions.DependencyInjection
             return this;
         }
 
-        public ConstructorBuilder Resolve(string name, Func<IServiceProvider, object> resolver, bool overwrite)
+        public ServiceFactoryBuilder Resolve(string name, Func<IServiceProvider, object> resolver, bool overwrite)
         {
             if (name is null)
                 throw new ArgumentNullException(nameof(name));
