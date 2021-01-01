@@ -7,6 +7,20 @@ using System.Reflection;
 
 namespace GRXoft.Extensions.DependencyInjection
 {
+    /// <summary>
+    /// Enables configuring and building a service factory
+    /// in a simplified and fluent manner.
+    /// </summary>
+    /// <remarks>
+    /// The constructed factory is a delegate that accepts a single parameter
+    /// of <see cref="IServiceProvider"/> type. It is based either on a
+    /// constructor or on an arbitrary method. By default, all parameters are
+    /// resolved by calling <see cref="IServiceProvider.GetService(Type)"/>,
+    /// unless explicitly configured.
+    /// <para/>
+    /// This helps to reduce boilerplate code by focusing only on customized
+    /// parameters, falling back to default behavior for all the other ones.
+    /// </remarks>
     public sealed class ServiceFactoryBuilder
     {
         private static readonly MethodInfo _method = typeof(IServiceProvider).GetMethod(nameof(IServiceProvider.GetService));
