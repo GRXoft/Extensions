@@ -68,7 +68,28 @@ namespace GRXoft.Extensions.DependencyInjection
         }
 
         /// <summary>
-        /// Configures parameter matched by <paramref name="type"/> to be resolved by given <paramref name="resolver"/>.
+        /// Configures parameter matched by <paramref name="name"/> to be resolved using given <paramref name="resolver"/>.
+        /// </summary>
+        /// <returns>This instance, for chaining.</returns>
+        /// <exception cref="ArgumentNullException">
+        /// Either <paramref name="name"/> or <paramref name="resolver"/> is null.
+        /// </exception>
+        /// <inheritdoc cref="Resolve(string, Type, Delegate, bool)"/>
+        public ServiceFactoryBuilder Resolve(string name, Func<IServiceProvider, object> resolver, bool overwrite = false)
+        {
+            if (name is null)
+                throw new ArgumentNullException(nameof(name));
+
+            if (resolver is null)
+                throw new ArgumentNullException(nameof(resolver));
+
+            Resolve(name, null, resolver, overwrite);
+
+            return this;
+        }
+
+        /// <summary>
+        /// Configures parameter matched by <paramref name="type"/> to be resolved using given <paramref name="resolver"/>.
         /// </summary>
         /// <returns>This instance, for chaining.</returns>
         /// <exception cref="ArgumentNullException">
@@ -84,22 +105,6 @@ namespace GRXoft.Extensions.DependencyInjection
                 throw new ArgumentNullException(nameof(resolver));
 
             Resolve(null, type, resolver, overwrite);
-
-            return this;
-        }
-
-        public ServiceFactoryBuilder Resolve(string name, Func<IServiceProvider, object> resolver, bool overwrite)
-        {
-            if (name is null)
-                throw new ArgumentNullException(nameof(name));
-
-            if (string.IsNullOrWhiteSpace(name))
-                throw new ArgumentException(); // TODO
-
-            if (resolver is null)
-                throw new ArgumentNullException(nameof(resolver));
-
-            Resolve(name, null, resolver, overwrite);
 
             return this;
         }
