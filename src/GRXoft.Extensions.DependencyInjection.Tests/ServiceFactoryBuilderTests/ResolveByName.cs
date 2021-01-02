@@ -56,7 +56,7 @@ namespace GRXoft.Extensions.DependencyInjection.ServiceFactoryBuilderTests
             var sut = new ServiceFactoryBuilder(typeof(object));
 
             // Act
-            var act = FluentActions.Invoking(() => sut.Resolve(type: typeof(object), resolver: null));
+            var act = FluentActions.Invoking(() => sut.Resolve(name: "item1", resolver: null));
 
             // Assert
             act.Should().Throw<ArgumentNullException>().And.ParamName.Should().Be("resolver");
@@ -69,10 +69,10 @@ namespace GRXoft.Extensions.DependencyInjection.ServiceFactoryBuilderTests
             var sut = new ServiceFactoryBuilder(typeof(object));
 
             // Act
-            var act = sut.Invoking(x => x.Resolve(type: null, resolver: sp => default));
+            var act = sut.Invoking(x => x.Resolve(name: null, resolver: sp => default));
 
             // Assert
-            act.Should().Throw<ArgumentNullException>().And.ParamName.Should().Be("type");
+            act.Should().Throw<ArgumentNullException>().And.ParamName.Should().Be("name");
         }
 
         [Test]
