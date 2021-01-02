@@ -109,6 +109,24 @@ namespace GRXoft.Extensions.DependencyInjection
             return this;
         }
 
+        /// <summary>
+        /// Configures parameter matched by type <typeparamref name="T"/> to be resolved using given <paramref name="resolver"/>.
+        /// </summary>
+        /// <returns>This instance, for chaining.</returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="resolver"/> is null.
+        /// </exception>
+        /// <inheritdoc cref="Resolve(string, Type, Delegate, bool)"/>
+        public ServiceFactoryBuilder Resolve<T>(Func<IServiceProvider, T> resolver, bool overwrite = false)
+        {
+            if (resolver is null)
+                throw new ArgumentNullException(nameof(resolver));
+
+            Resolve(null, typeof(T), resolver, overwrite);
+
+            return this;
+        }
+
         private static Expression BuildCustomParameterExpression(Expression serviceProvider, ParameterInfo parameter, Delegate resolver)
         {
             var expression = (Expression)Expression.Invoke(Expression.Constant(resolver), serviceProvider);
