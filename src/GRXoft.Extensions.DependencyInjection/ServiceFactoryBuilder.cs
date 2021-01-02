@@ -47,6 +47,12 @@ namespace GRXoft.Extensions.DependencyInjection
             _parameterResolvers = new Dictionary<string, Delegate>();
         }
 
+        /// <summary>
+        /// Builds a service factory delegate based on current configuration.
+        /// </summary>
+        /// <returns>
+        /// A delegate that creates a service instance using an <see cref="IServiceProvider"/>.
+        /// </returns>
         public Func<IServiceProvider, object> Build()
         {
             var serviceProvider = Expression.Parameter(typeof(IServiceProvider), "sp");
