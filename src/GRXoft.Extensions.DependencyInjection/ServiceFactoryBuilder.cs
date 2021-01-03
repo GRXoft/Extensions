@@ -153,6 +153,14 @@ namespace GRXoft.Extensions.DependencyInjection
             return expression;
         }
 
+        private static string FormatCriteria(string name, Type type)
+        {
+            return
+                $"name={(name is string ? $"'{name}'" : "<null>")}" +
+                ", " +
+                $"type={(type is Type ? type.FullName : "<null>")}";
+        }
+
         private static ConstructorInfo SelectConstructor(Type type)
         {
             if (type.IsInterface || type.IsAbstract)
@@ -172,6 +180,19 @@ namespace GRXoft.Extensions.DependencyInjection
             return ctors[0];
         }
 
+        private IEnumerable<ParameterInfo> GetMatchingParameters(string name, Type type)
+        {
+            var matchingParameters = _parameters.AsEnumerable();
+
+            if (name is string)
+                matchingParameters = matchingParameters.Where(p => p.Name.Equals(name, StringComparison.Ordinal));
+
+            if (type is Type)
+                matchingParameters = matchingParameters.Where(p => p.ParameterType.Equals(type));
+
+            return matchingParameters;
+        }
+
         /// <param name="name">Name of the parameter to be matched.</param>
         /// <param name="type">Type of the parameter to be matched.</param>
         /// <exception cref="ArgumentException">
@@ -181,32 +202,18 @@ namespace GRXoft.Extensions.DependencyInjection
         {
             Debug.Assert(name is string || type is Type);
 
-            var matchingParameters = _parameters.AsEnumerable();
-
-            if (name is string)
-                matchingParameters = matchingParameters.Where(p => p.Name.Equals(name, StringComparison.Ordinal));
-
-            if (type is Type)
-                matchingParameters = matchingParameters.Where(p => p.ParameterType.Equals(type));
-
-            var enumerator = matchingParameters.GetEnumerator();
+            var enumerator = GetMatchingParameters(name, type).GetEnumerator();
 
             if (!enumerator.MoveNext())
             {
-                throw new ArgumentException(
-                    "No parameters match specified criteria " +
-                    $"(name={name}, type={type?.FullName})"
-                );
+                throw new ArgumentException($"No parameters match specified criteria ({FormatCriteria(name, type)})");
             }
 
             var matchedParameter = enumerator.Current;
 
             if (enumerator.MoveNext())
             {
-                throw new ArgumentException(
-                    "Multiple parameters match specified criteria " +
-                    $"(name={name}, type={type?.FullName})"
-                );
+                throw new ArgumentException($"Multiple parameters match specified criteria ({FormatCriteria(name, type)})");
             }
 
             return matchedParameter;
