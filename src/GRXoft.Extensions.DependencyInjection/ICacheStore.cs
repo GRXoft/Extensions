@@ -7,6 +7,6 @@ namespace GRXoft.Extensions.DependencyInjection
     {
         Task<T> Read(CancellationToken cancellationToken);
 
-        Task Update(Task<T> task, CancellationToken cancellationToken);
+        Task<bool> Update(Task<T> task, CancellationToken cancellationToken);
     }
 }

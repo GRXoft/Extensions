@@ -16,19 +16,18 @@ namespace GRXoft.Extensions.DependencyInjection
             return await task.WaitAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task Update(Task<T> source, CancellationToken cancellationToken)
+        public async Task<bool> Update(Task<T> source, CancellationToken cancellationToken)
         {
             _next = source ?? throw new ArgumentNullException(nameof(source));
 
             try
             {
                 await source.WaitAsync(cancellationToken).ConfigureAwait(false);
-                OnUpdateSucceeded(source);
+                return OnUpdateSucceeded(source);
             }
             catch
             {
-                OnUpdateFailed(source);
-                throw;
+                return OnUpdateFailed(source);
             }
         }
 
@@ -41,15 +40,19 @@ namespace GRXoft.Extensions.DependencyInjection
             return source.Equals(originalNext);
         }
 
-        private void OnUpdateFailed(Task<T> source)
+        private bool OnUpdateFailed(Task<T> source)
         {
-            ClearNext(source);
+            return ClearNext(source);
         }
 
-        private void OnUpdateSucceeded(Task<T> source)
+        private bool OnUpdateSucceeded(Task<T> source)
         {
-            if (ClearNext(source))
+            var result = ClearNext(source);
+
+            if (result)
                 _current = source;
+
+            return result;
         }
     }
 }
